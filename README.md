@@ -107,7 +107,7 @@ Hello World
 You can override the port, the URI or the reply. On the following example, we are overriden all of the elements:
 
 ```
-ant@myserver:~$ java -DSSLCERT=httpdlight.jks -DSSLPASSWORD=password -DREPLY="<ok/>" -jar httpdlight-0.2.jar
+ant@myserver:~$ java -DSSLCERT=../httpdlight.jks -DSSLPASSWORD=password -DREPLY="<ok/>" -jar httpdlight-0.2.jar
 Found overridden reply: <ok/>
 Found overridden SSLCERT: httpdlight.jks
 Found overridden SSLPASSWORD: password
