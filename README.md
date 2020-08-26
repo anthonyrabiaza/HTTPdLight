@@ -27,7 +27,7 @@ Java HotSpot(TM) 64-Bit Server VM (build 20.45-b01, mixed mode)
 The default port is 8008, the default uri is /rnif/partner1 and the default reply is an empty String ""
 
 ```
-ant@myserver:~$ java -jar httpdlight-0.2.jar
+ant@myserver:~$ java -jar httpdlight-0.3.jar
 Starting HTTPServer at port 8008, URI /rnif/partner1
 Started!
 
@@ -68,6 +68,17 @@ You can override the port, the URI or the reply. On the following example, we ar
 
 ```
 ant@myserver:~$ java -DPORT=8009 -DURI="/rnif/partner3" -DREPLY="<ok/>" -jar httpdlight-0.2.jar
+Found overridden uri: /rnif/partner3
+Found overridden port: 8009
+Found overridden reply: <ok/>
+Starting HTTPServer at port 8009, URI /rnif/partner3
+Started!
+```
+
+You can use a specific reply handler to return payload and callback another from a properties file:
+
+```
+ant@myserver:~$ java -DPORT=8009 -DURI="/rnif/partner3" -DREPLYHANDLER="replyhandler.properties" -jar httpdlight-0.3.jar
 Found overridden uri: /rnif/partner3
 Found overridden port: 8009
 Found overridden reply: <ok/>

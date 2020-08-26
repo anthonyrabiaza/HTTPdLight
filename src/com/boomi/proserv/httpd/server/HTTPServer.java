@@ -1,5 +1,6 @@
 package com.boomi.proserv.httpd.server;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -7,9 +8,13 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.security.KeyStore;
-import java.util.Date;
-import java.util.Iterator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Properties;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -32,7 +37,6 @@ public class HTTPServer {
 	
 	private static String URI 			= "/rnif/partner1"; // Should start with "/" 
 	private static Integer PORT 		= 8008;
-	private static String REPLY 		= "";
 	private static String SSLCERT 		= "";
 	private static String SSLPASSWORD 	= "";
 
@@ -46,7 +50,6 @@ public class HTTPServer {
     		HttpServer server;
 	    	String uri 			= URI;
 	    	int port 			= PORT;
-	    	String reply 		= REPLY;
 	    	String sslCert 		= SSLCERT;
 	    	String sslPassword 	= SSLPASSWORD;
 	    	
@@ -58,10 +61,7 @@ public class HTTPServer {
 	    		port = Integer.parseInt(System.getProperty("PORT"));
 	    		System.out.println("Found overridden port: " + port);
 	    	}
-	    	if(System.getProperty("REPLY")!=null && !System.getProperty("REPLY").equals("")) {
-	    		reply = System.getProperty("REPLY");
-	    		System.out.println("Found overridden reply: " + reply);
-	    	}
+
 	    	if(System.getProperty("SSLCERT")!=null && !System.getProperty("SSLCERT").equals("")) {
 	    		sslCert = System.getProperty("SSLCERT");
 	    		System.out.println("Found overridden SSLCERT: " + sslCert);
@@ -78,8 +78,15 @@ public class HTTPServer {
     			server = HttpsServer.create(new InetSocketAddress(port), 0);
     			((HttpsServer)server).setHttpsConfigurator(getSSLconfigurator(sslCert, sslPassword));
     		}
-	        server.createContext(uri, new StandardHandler(reply));
-	        server.setExecutor(null); // creates a default executor
+	        String replyHandler = System.getProperty("REPLYHANDLER");
+			if(replyHandler!=null && !replyHandler.equals("")) {
+	        	System.out.println("Using Reply handler " + replyHandler);
+	        	server.createContext(uri, new InternalHandler(replyHandler));
+	        } else {
+	        	server.createContext(uri, new InternalHandler());
+	        	System.out.println("Using default Reply handler");
+	        }
+	        server.setExecutor(null);
 	        server.start();
 	        System.out.println("Started!");
     	}
@@ -96,29 +103,58 @@ public class HTTPServer {
         HttpsConfigurator configurator = new HttpsConfigurator(sslContext);
         return configurator;
     }
-
-    static class StandardHandler implements HttpHandler {
-    	String reply;
+    
+    static class InternalHandler implements HttpHandler {
+    	String className;
+    	HTTPHandler handler;
+    	
         @Override
-        public void handle(HttpExchange t) throws IOException {
-        	System.out.println("########## " + new Date() + " Receiving request" + " ##########");
-            String response = reply;
-            t.sendResponseHeaders(200, response.length());
-            System.out.println("Receiving request " + t.getRequestURI());
-            System.out.println("Headers");
-            for (Iterator<String> iterator = t.getRequestHeaders().keySet().iterator(); iterator.hasNext();) {
-				String header = iterator.next();
-				System.out.println("\t" + header + ":" + t.getRequestHeaders().get(header));
-			}
-            System.out.println("Body :\n"+inputStreamToString(t.getRequestBody()));
-            OutputStream os = t.getResponseBody();
-            os.write(response.getBytes());
-            os.close();
-            System.out.println("########## " + new Date() + " End of Receiving request" + " ##########");
+        public void handle(HttpExchange exchange) throws IOException {
+        	if(className!=null) {
+				try {
+					Class<?> c = Class.forName(className);
+					handler = (HTTPHandler) c.newInstance();
+				} catch (Exception e) {
+					e.printStackTrace();
+					handler = null;
+				}
+        	} else { 
+        		handler = new HTTPBasicHandler();
+        	}
+        	
+        	URI uri;
+        	Map<String, String> query = null;
+        	Map<String, String> headers;
+        	String body;
+        	String response;
+        	
+        	uri = exchange.getRequestURI();
+        	headers = new HashMap<String, String>();
+    		for (Entry<String, List<String>> entry : exchange.getRequestHeaders().entrySet()) {
+	            headers.put(entry.getKey(), entry.getValue().get(0));
+	        }
+    		
+    		body 		= inputStreamToString(exchange.getRequestBody());
+        	response 	= handler.handle(uri, query, headers, body);
+        	
+        	if(handler.getHeaders()!=null) {
+	        	for (Map.Entry<String, String> entry : handler.getHeaders().entrySet()) {
+		            exchange.getResponseHeaders().set(entry.getKey(),  entry.getValue());
+		        }
+        	}
+        	
+        	exchange.sendResponseHeaders(handler.getStatusCode(), response.length());
+    		OutputStream os = exchange.getResponseBody();
+    		os.write(response.getBytes());
+    		os.close();
         }
         
-        public StandardHandler(String reply) {
-        	this.reply = reply;
+         
+        public InternalHandler(String className) {
+        	this.className = className;
+        }
+        
+        public InternalHandler() {
         } 
     }
     
@@ -141,6 +177,18 @@ public class HTTPServer {
 		}
 		return out.toString();
 		
+	}
+	
+	static public Properties getProperties(String filename) throws Exception {
+		Properties prop = new Properties();
+		System.out.println("INFO: Looking for " + filename + " ...");
+		InputStream inputStream = HTTPServer.class.getClassLoader().getResourceAsStream(filename);
+		if(inputStream==null) {
+			inputStream = new FileInputStream(new File(filename));
+		}
+		prop.load(inputStream);
+		System.out.println("INFO: File found");
+		return prop;
 	}
 
 }
