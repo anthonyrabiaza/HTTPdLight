@@ -15,8 +15,8 @@ public class HTTPReplyAndForwardHandler implements HTTPHandler {
 
 	private static final int WATERMARK_MAX = 50;
 	private static Properties properties;
-	int counter = 0;
-	Date firstTrigger;
+	private static int counter = -1;
+	private static Date firstTrigger;
 
 
 	public HTTPReplyAndForwardHandler() {
@@ -71,39 +71,41 @@ public class HTTPReplyAndForwardHandler implements HTTPHandler {
 			forwardBody = replaceBody(forwardBody, mapBody);
 		}
 		final String finalforwardBody = forwardBody;
-		
-		url = properties.getProperty("forward.url");
-		final int sleep = Integer.valueOf(properties.getProperty("forward.sleep"));
 
-		Thread thread = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					Thread.sleep(sleep);
-					log("########## " + new Date() + " Forwarding " + " ##########");
-					log("Forward will be " + finalforwardBody);
-					URL urlTarget = new URL(url);
-					HttpURLConnection httpConnection = (HttpURLConnection) urlTarget.openConnection();
-					httpConnection.setUseCaches(false);
-					httpConnection.setDoOutput(true);
-					httpConnection.setRequestMethod("POST");
-					httpConnection.setFixedLengthStreamingMode(finalforwardBody.length());
-					String headersStr = properties.getProperty("forward.headers");
-					Map<String, String> forwardHeaders = getMapFromString(headersStr, ",");
-					for (Map.Entry<String, String> entry : forwardHeaders.entrySet()) {
-						httpConnection.setRequestProperty(entry.getKey(),  entry.getValue());
+		url = properties.getProperty("forward.url");
+		if(url!=null && !url.equals("")) {
+			final int sleep = Integer.valueOf(properties.getProperty("forward.sleep"));
+
+			Thread thread = new Thread(new Runnable() {
+				@Override
+				public void run() {
+					try {
+						Thread.sleep(sleep);
+						log("########## " + new Date() + " Forwarding " + " ##########");
+						log("Forward will be " + finalforwardBody);
+						URL urlTarget = new URL(url);
+						HttpURLConnection httpConnection = (HttpURLConnection) urlTarget.openConnection();
+						httpConnection.setUseCaches(false);
+						httpConnection.setDoOutput(true);
+						httpConnection.setRequestMethod("POST");
+						httpConnection.setFixedLengthStreamingMode(finalforwardBody.length());
+						String headersStr = properties.getProperty("forward.headers");
+						Map<String, String> forwardHeaders = getMapFromString(headersStr, ",");
+						for (Map.Entry<String, String> entry : forwardHeaders.entrySet()) {
+							httpConnection.setRequestProperty(entry.getKey(),  entry.getValue());
+						}
+						OutputStreamWriter writer = new OutputStreamWriter(httpConnection.getOutputStream());
+						writer.write(finalforwardBody);
+						writer.flush();
+						httpConnection.disconnect();
+						log("########## " + new Date() + " End of Forwarding " + " ##########");
+					} catch (Exception e) {
+						e.printStackTrace();
 					}
-					OutputStreamWriter writer = new OutputStreamWriter(httpConnection.getOutputStream());
-					writer.write(finalforwardBody);
-					writer.flush();
-					httpConnection.disconnect();
-					log("########## " + new Date() + " End of Forwarding " + " ##########");
-				} catch (Exception e) {
-					e.printStackTrace();
 				}
-			}
-		});  
-		thread.start();
+			});  
+			thread.start();
+		}
 		// END FORWARD
 
 		return replyBody;
@@ -145,7 +147,7 @@ public class HTTPReplyAndForwardHandler implements HTTPHandler {
 		}
 	}
 
-	private void newTrigger() {
+	static private void newTrigger() {
 		if("true".equalsIgnoreCase(System.getProperty("BENCHMARK"))) {
 			counter++;
 			String screenDisplay = "";

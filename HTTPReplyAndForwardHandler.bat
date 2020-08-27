@@ -1,0 +1,1 @@
+java -DPORT=8080 -DURI=/ -DREPLYHANDLER=com.boomi.proserv.httpd.server.HTTPReplyAndForwardHandler -DBENCHMARK=true -jar jar/httpdlight-0.3.jar
