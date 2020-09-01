@@ -134,11 +134,17 @@ public class HTTPReplyAndForwardHandler implements HTTPHandler {
 	}
 
 	private String replaceBody(String body, Map<String, String> replacements) {
+		replacements.put("__counter__", getFormattedCounter());
 		for (Map.Entry<String, String> entry : replacements.entrySet()) {
 			body = body.replaceAll("@@" + entry.getKey() +"@@", entry.getValue());
 		}
 
 		return body;
+	}
+	
+	private String getFormattedCounter() {
+		String counterFormat = properties.getProperty("counter.format");
+		return String.format(counterFormat, counter);
 	}
 
 	private void log(String str) {
