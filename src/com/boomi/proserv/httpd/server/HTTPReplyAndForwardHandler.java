@@ -166,11 +166,11 @@ public class HTTPReplyAndForwardHandler implements HTTPHandler {
 			Date now = new Date();
 			long diff = (now.getTime() - firstTrigger.getTime())/1000;
 
-			//After 2 minutes idle, reset
-			if(diff>120) {
-				counter = 0;
-				firstTrigger = new Date();
-			}
+//			//After 2 minutes idle, reset
+//			if(diff>120) {
+//				counter = 0;
+//				firstTrigger = new Date();
+//			}
 
 			for (int i = 0; i < WATERMARK_MAX; i++) {
 				screenDisplay += i<displayCounter?"=":i==displayCounter?">":" ";
