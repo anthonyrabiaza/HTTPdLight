@@ -1,6 +1,6 @@
 # HTTPdLight
 
-HTTPdLight is a lightweight HTTP Server used to Mock endpoints. It requires only to have JRE or a JDK installed. Minimum version or JRE or JDK is 1.6.
+HTTPdLight is a lightweight HTTP Server used to Mock endpoints, create dynamic stub or proxy service with verbose debugging. It requires only to have JRE or a JDK installed. Minimum version or JRE or JDK is 1.6.
 
 ## Getting Started
 
