@@ -1,23 +1,14 @@
 package com.boomi.proserv.httpd.server;
 
-import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 
-public class HTTPReplyAndForwardHandler implements HTTPHandler {
-
-	private static final int WATERMARK_MAX = 50;
-	private static Properties properties;
-	private static int counter = -1;
-	private static Date firstTrigger;
-
+public class HTTPReplyAndForwardHandler extends HTTPBasicHandler implements HTTPHandler {
 
 	public HTTPReplyAndForwardHandler() {
 		if(properties == null) {
@@ -30,7 +21,7 @@ public class HTTPReplyAndForwardHandler implements HTTPHandler {
 	}
 
 	@Override
-	public String handle(URI uri, Map<String, String> query, Map<String, String> headers, String body) {
+	public HTTPResponse handle(URI uri, String method, Map<String, String> query, Map<String, String> headers, String body) {
 
 		newTrigger();
 
@@ -92,6 +83,7 @@ public class HTTPReplyAndForwardHandler implements HTTPHandler {
 						String headersStr = properties.getProperty("forward.headers");
 						Map<String, String> forwardHeaders = getMapFromString(headersStr, ",");
 						for (Map.Entry<String, String> entry : forwardHeaders.entrySet()) {
+							log("\t" + entry.getKey() + ":"+ entry.getValue());
 							httpConnection.setRequestProperty(entry.getKey(),  entry.getValue());
 						}
 						OutputStreamWriter writer = new OutputStreamWriter(httpConnection.getOutputStream());
@@ -108,81 +100,20 @@ public class HTTPReplyAndForwardHandler implements HTTPHandler {
 		}
 		// END FORWARD
 
-		return replyBody;
+		HTTPResponse httpResponse = new HTTPResponse(replyBody);
+		httpResponse.setHeadersFlat(getHeaders());
+		return httpResponse;
 	}
 
-	private Map<String, String> getMapFromString(String body, String separator) {
-		Map<String, String> mapBody;
-		mapBody = new HashMap<String, String>();
-		String[] keyValues = body.split(separator);
-		for (int i = 0; i < keyValues.length; i++) {
-			String[] keyValue = keyValues[i].split("=");
-			mapBody.put(keyValue[0], keyValue[1]);
-		}
-		return mapBody;
-	}
 
 	@Override
 	public int getStatusCode() {
 		return Integer.parseInt(properties.getProperty("reply.status"));
 	}
 
-	@Override
 	public Map<String, String> getHeaders() {
 		String headersStr = properties.getProperty("reply.headers");
 		return getMapFromString(headersStr, ",");
 	}
 
-	private String replaceBody(String body, Map<String, String> replacements) {
-		replacements.put("__counter__", getFormattedCounter());
-		for (Map.Entry<String, String> entry : replacements.entrySet()) {
-			body = body.replaceAll("@@" + entry.getKey() +"@@", entry.getValue());
-		}
-
-		return body;
-	}
-	
-	private String getFormattedCounter() {
-		String counterFormat = properties.getProperty("counter.format");
-		return String.format(counterFormat, counter);
-	}
-
-	private void log(String str) {
-		if(!"true".equalsIgnoreCase(System.getProperty("BENCHMARK"))) {
-			System.out.println(str);
-		}
-	}
-
-	static private void newTrigger() {
-		if("true".equalsIgnoreCase(System.getProperty("BENCHMARK"))) {
-			counter++;
-			String screenDisplay = "";
-			int displayCounter = counter%50;
-
-			if(firstTrigger == null) {
-				firstTrigger = new Date();
-			}
-
-			Date now = new Date();
-			long diff = (now.getTime() - firstTrigger.getTime())/1000;
-
-//			//After 2 minutes idle, reset
-//			if(diff>120) {
-//				counter = 0;
-//				firstTrigger = new Date();
-//			}
-
-			for (int i = 0; i < WATERMARK_MAX; i++) {
-				screenDisplay += i<displayCounter?"=":i==displayCounter?">":" ";
-			}
-
-			long perf = diff==0?0:counter/diff;
-			screenDisplay = "\rLoad: [" + screenDisplay + "] " + (counter+1) + " tx, " + perf + " tx/s, last tx at " + now + " ";
-			try {
-				System.out.write(screenDisplay.getBytes());
-			} catch (IOException e) {
-				System.out.print('#');
-			}
-		}
-	}
 }

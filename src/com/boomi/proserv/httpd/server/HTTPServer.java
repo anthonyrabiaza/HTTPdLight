@@ -125,8 +125,9 @@ public class HTTPServer {
         	URI uri;
         	Map<String, String> query = null;
         	Map<String, String> headers;
+        	String method;
         	String body;
-        	String response;
+        	HTTPResponse response;
         	
         	uri = exchange.getRequestURI();
         	headers = new HashMap<String, String>();
@@ -135,17 +136,20 @@ public class HTTPServer {
 	        }
     		
     		body 		= inputStreamToString(exchange.getRequestBody());
-        	response 	= handler.handle(uri, query, headers, body);
+    		method 		= exchange.getRequestMethod();
+        	response 	= handler.handle(uri, method, query, headers, body);
         	
-        	if(handler.getHeaders()!=null) {
-	        	for (Map.Entry<String, String> entry : handler.getHeaders().entrySet()) {
-		            exchange.getResponseHeaders().set(entry.getKey(),  entry.getValue());
-		        }
+        	if(response.getHeaders() != null) {
+	        	for (Map.Entry<String, List<String>> entry : response.getHeaders().entrySet()) {
+	    			String key = entry.getKey();
+	    			if(key!=null) {
+						exchange.getResponseHeaders().set(key, entry.getValue().get(0));
+	    			}
+	    		}
         	}
-        	
-        	exchange.sendResponseHeaders(handler.getStatusCode(), response.length());
+        	exchange.sendResponseHeaders(handler.getStatusCode(), response.getBody().length());
     		OutputStream os = exchange.getResponseBody();
-    		os.write(response.getBytes());
+    		os.write(response.getBody().getBytes());
     		os.close();
         }
         
