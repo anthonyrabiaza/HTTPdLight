@@ -22,7 +22,7 @@ Java HotSpot(TM) 64-Bit Server VM (build 20.45-b01, mixed mode)
 
 ```
 
-### Run the Server with default arguments
+## Run the Server with default arguments
 
 The default port is 8008, the default uri is /rnif/partner1 and the default reply is an empty String ""
 
@@ -62,7 +62,7 @@ Hello World
 
 ```
 
-### Run the Server with specific arguments
+## Run the Server with specific arguments
 
 You can override the port, the URI or the reply. On the following example, we are overriden all of the elements:
 
@@ -113,7 +113,7 @@ Hello World
 ########## Wed Jun 13 12:47:58 SGT 2018 End of Receiving request ##########
 ```
 
-### Run the Server with SSL
+## Run the Server with SSL
 
 You can override the port, the URI or the reply. On the following example, we are overriden all of the elements:
 
@@ -152,3 +152,15 @@ Hello World
 </message>
 ########## Wed Jun 27 11:28:00 SGT 2018 End of Receiving request ##########
 ```
+
+## Using httpdlight as a Mock/Stub for Performance Benchmarks
+
+Use the following command:
+
+```
+java -DPORT=8008 -DURI=/ -DREPLY=OKOK -DBENCHMARK=true -jar httpdlight-0.4.jar
+```
+
+The server will listen to any request on port 8008 and will reply with a ```OKOK``` and HTTP Status of 200.
+
+Several tests were conducted and the server can provide a throughput of up to 1500 transactions per second on a 2 core machine with 16GB of Memory (15% of the CPU is used and about 512MB or Memory).
