@@ -158,9 +158,9 @@ Hello World
 Use the following command:
 
 ```
-java -DPORT=8008 -DURI=/ -DREPLY=OKOK -DBENCHMARK=true -jar httpdlight-0.4.jar
+java -Xmx1g -DPORT=8008 -DURI=/ -DREPLY=OKOK -DBENCHMARK=true -jar httpdlight-0.4.jar
 ```
 
 The server will listen to any request on port 8008 and will reply with a ```OKOK``` and HTTP Status of 200.
 
-Several tests were conducted and the server can provide a throughput of up to 1500 transactions per second on a 2 core machine with 16GB of Memory (15% of the CPU is used and about 512MB or Memory).
+Several tests were conducted and the server can provide a throughput of up to 1500 transactions per second (200 concurrent clients/threads) on a 2 core machine with 16GB of Memory (15% of the CPU is used and about 512MB or Memory).
