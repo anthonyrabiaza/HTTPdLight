@@ -17,14 +17,16 @@ public class HTTPBasicHandler implements HTTPHandler {
 
 	@Override
 	public HTTPResponse handle(URI uri, String method, Map<String, String> query, Map<String, String> headers, String body) {
-		log("########## " + new Date() + " Receiving request" + " ##########");
-		log("Receiving request: " + uri);
-		log("Headers:");
-		for (Map.Entry<String, String> entry : headers.entrySet()) {
-			log("\t" + entry.getKey() + ":"+ entry.getValue());
+		if(!isBenchmark()) {
+			log("########## " + new Date() + " Receiving request" + " ##########");
+			log("Receiving request: " + uri);
+			log("Headers:");
+			for (Map.Entry<String, String> entry : headers.entrySet()) {
+				log("\t" + entry.getKey() + ":"+ entry.getValue());
+			}
+			log("Body:\n"+ body);
+			log("########## " + new Date() + " End of Receiving request" + " ##########");
 		}
-		log("Body:\n"+ body);
-		log("########## " + new Date() + " End of Receiving request" + " ##########");
 
 		String reply = System.getProperty("REPLY");
 		if(reply==null) {
@@ -38,10 +40,15 @@ public class HTTPBasicHandler implements HTTPHandler {
 	}
 
 	protected void log(String str) {
-		if(!"true".equalsIgnoreCase(System.getProperty("BENCHMARK"))) {
+		if(!isBenchmark()) {
 			System.out.println(str);
 		}
 	}
+
+	protected static boolean isBenchmark() {
+		return "true".equalsIgnoreCase(System.getProperty("BENCHMARK"));
+	}
+	
 
 	protected Map<String, String> getMapFromString(String body, String separator) {
 		Map<String, String> mapBody;
@@ -75,7 +82,7 @@ public class HTTPBasicHandler implements HTTPHandler {
 	}
 
 	static protected void newTrigger() {
-		if("true".equalsIgnoreCase(System.getProperty("BENCHMARK"))) {
+		if(isBenchmark()) {
 			counter++;
 			String screenDisplay = "";
 			int displayCounter = counter%50;
