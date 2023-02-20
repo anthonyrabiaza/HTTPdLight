@@ -58,20 +58,20 @@ public class HTTPReplyAndForwardHandler extends HTTPBasicHandler implements HTTP
 
 		//FORWARD
 		String forwardBody = properties.getProperty("forward.body");
-		if(forwardBody!=null) {
+		if(forwardBody!=null && mapBody!=null) {
 			forwardBody = replaceBody(forwardBody, mapBody);
 		}
 		final String finalforwardBody = forwardBody;
 
 		url = properties.getProperty("forward.url");
 		if(url!=null && !url.equals("")) {
-			final int sleep = Integer.valueOf(properties.getProperty("forward.sleep"));
+			final int forwardSleep = Integer.valueOf(properties.getProperty("forward.sleep"));
 
 			Thread thread = new Thread(new Runnable() {
 				@Override
 				public void run() {
 					try {
-						Thread.sleep(sleep);
+						Thread.sleep(forwardSleep);
 						log("########## " + new Date() + " Forwarding " + " ##########");
 						log("Forward will be " + finalforwardBody);
 						URL urlTarget = new URL(url);
@@ -100,6 +100,11 @@ public class HTTPReplyAndForwardHandler extends HTTPBasicHandler implements HTTP
 		}
 		// END FORWARD
 
+		int replySleep = 0;
+		try {
+			replySleep = Integer.valueOf(properties.getProperty("reply.sleep"));
+			Thread.sleep(replySleep);
+		} catch (Exception e) {}
 		HTTPResponse httpResponse = new HTTPResponse(replyBody);
 		httpResponse.setHeadersFlat(getHeaders());
 		return httpResponse;

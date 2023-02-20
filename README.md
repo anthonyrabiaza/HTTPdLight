@@ -4,7 +4,7 @@ HTTPdLight is a lightweight HTTP Server used to Mock endpoints, create dynamic s
 
 ## Getting Started
 
-Please download the [jar](jar/httpdlight-0.2.jar?raw=true) from github.
+Please download the [jar](jar/httpdlight-0.5.jar?raw=true) from github.
 For Testing with SSL, you can also download the self-signed certificate [jks](httpdlight.jks?raw=true). Apart from that, you have:
 
 - the private certificate is available here [pem](httpdlight.pem?raw=true)
@@ -27,7 +27,7 @@ Java HotSpot(TM) 64-Bit Server VM (build 20.45-b01, mixed mode)
 The default port is 8008, the default uri is /rnif/partner1 and the default reply is an empty String ""
 
 ```
-ant@myserver:~$ java -jar httpdlight-0.3.jar
+ant@myserver:~$ java -jar httpdlight-0.5.jar
 Starting HTTPServer at port 8008, URI /rnif/partner1
 Started!
 
@@ -67,7 +67,7 @@ Hello World
 You can override the port, the URI or the reply. On the following example, we are overriden all of the elements:
 
 ```
-ant@myserver:~$ java -DPORT=8009 -DURI="/rnif/partner3" -DREPLY="<ok/>" -jar httpdlight-0.2.jar
+ant@myserver:~$ java -DPORT=8009 -DURI="/rnif/partner3" -DREPLY="<ok/>" -jar httpdlight-0.5.jar
 Found overridden uri: /rnif/partner3
 Found overridden port: 8009
 Found overridden reply: <ok/>
@@ -78,7 +78,7 @@ Started!
 You can use a specific reply handler to return payload and callback another from a properties file:
 
 ```
-ant@myserver:~$ java -DPORT=8009 -DURI="/rnif/partner3" -DREPLYHANDLER="replyhandler.properties" -jar httpdlight-0.3.jar
+ant@myserver:~$ java -DPORT=8009 -DURI="/rnif/partner3" -DREPLYHANDLER=com.boomi.proserv.httpd.server.HTTPReplyAndForwardHandler -jar httpdlight-0.5.jar
 Found overridden uri: /rnif/partner3
 Found overridden port: 8009
 Found overridden reply: <ok/>
@@ -118,7 +118,7 @@ Hello World
 You can override the port, the URI or the reply. On the following example, we are overriden all of the elements:
 
 ```
-ant@myserver:~$ java -DSSLCERT=../httpdlight.jks -DSSLPASSWORD=password -DREPLY="<ok/>" -jar httpdlight-0.2.jar
+ant@myserver:~$ java -DSSLCERT=../httpdlight.jks -DSSLPASSWORD=password -DREPLY="<ok/>" -jar httpdlight-0.5.jar
 Found overridden reply: <ok/>
 Found overridden SSLCERT: httpdlight.jks
 Found overridden SSLPASSWORD: password
@@ -158,7 +158,7 @@ Hello World
 Use the following command:
 
 ```
-java -Xmx1g -DPORT=8008 -DURI=/ -DREPLY=OKOK -DBENCHMARK=true -jar httpdlight-0.4.jar
+java -Xmx1g -DPORT=8008 -DURI=/ -DREPLY=OKOK -DBENCHMARK=true -jar httpdlight-0.5.jar
 ```
 
 The server will listen to any request on port 8008 and will reply with a ```OKOK``` and HTTP Status of 200.
